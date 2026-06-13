@@ -572,6 +572,9 @@
     </div>
 
     <script>
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI BAWAH INI:
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyS7KiArn_6ehqewQA1wMLOnBWVFnC9kDvQt_ljggk4WasxASqPt4uRsgBZGHF6O19TEg/exec";
+
         const app = {
             db: { users: [], journals: [], settings: { schoolName: 'SMK NEGERI 1 DEMO', address: 'Jl. Pendidikan No. 1, Kota Belajar' }, messages: [] },
             currentUser: null,
@@ -606,15 +609,22 @@
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', options);
 
-                // Persiapan Integrasi GAS: Load data dari server/Sheets jika ada
-                if (typeof google !== 'undefined' && google.script) {
-                    google.script.run.withSuccessHandler((response) => {
-                        if (response) {
-                            this.db = JSON.parse(response);
-                            localStorage.setItem('pkl_database', response);
-                        }
-                        this.processLoginState();
-                    }).getDatabase();
+                // Fetch data menggunakan REST API ke Web App Google Apps Script
+                if (GAS_API_URL && GAS_API_URL.startsWith('http')) {
+                    fetch(GAS_API_URL + '?action=get')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data) {
+                                this.db = typeof data === 'string' ? JSON.parse(data) : data;
+                                localStorage.setItem('pkl_database', JSON.stringify(this.db));
+                            }
+                            this.processLoginState();
+                        })
+                        .catch(err => {
+                            console.error('Error saat load data dari GAS:', err);
+                            this.loadDb();
+                            this.processLoginState();
+                        });
                 } else {
                     this.loadDb();
                     this.processLoginState();
@@ -658,9 +668,18 @@
                 // Simpan ke memory lokal (agar aplikasi tetap responsif)
                 localStorage.setItem('pkl_database', JSON.stringify(this.db));
                 
-                // Integrasi GAS: Kirim data tersimpan ke Google Sheets di background
-                if (typeof google !== 'undefined' && google.script) {
-                    google.script.run.saveDatabase(JSON.stringify(this.db));
+                // Fetch POST ke GAS
+                if (GAS_API_URL && GAS_API_URL.startsWith('http')) {
+                    fetch(GAS_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8', 
+                        },
+                        body: JSON.stringify({
+                            action: 'save',
+                            data: JSON.stringify(this.db)
+                        })
+                    }).catch(err => console.error('Error saat save data ke GAS:', err));
                 }
             },
 
