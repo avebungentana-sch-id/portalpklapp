@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal PKL - Tahap 3</title>
+    <title>Portal PKL - Tahap 4</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -38,6 +38,11 @@
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
+
+        /* Styling Checkbox Custom */
+        .custom-checkbox {
+            width: 1.1rem; height: 1.1rem; accent-color: #1e40af; cursor: pointer;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -53,8 +58,15 @@
         }
     </script>
 </head>
-<body class="text-slate-800 antialiased overflow-hidden">
+<body class="text-slate-800 antialiased overflow-hidden h-screen w-full">
 
+    <!-- Indikator Koneksi Firebase -->
+    <div id="connection-indicator" class="fixed top-4 right-4 z-[100] flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-md border border-slate-200 transition-all duration-300">
+        <div id="connection-dot" class="w-2 h-2 rounded-full bg-slate-400"></div>
+        <span id="connection-text" class="text-[10px] font-bold uppercase tracking-wider text-slate-600">Memeriksa...</span>
+    </div>
+
+    <!-- Login Page -->
     <div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-blue-600 p-4 relative z-50">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all">
             <div class="text-center mb-8">
@@ -67,12 +79,12 @@
             
             <form id="login-form" onsubmit="app.login(event)" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email / Username</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i class="fas fa-user"></i>
                         </div>
-                        <input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-secondary focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="Masukkan username">
+                        <input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-secondary focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="Masukkan email/username">
                     </div>
                 </div>
                 <div>
@@ -81,20 +93,30 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i class="fas fa-lock"></i>
                         </div>
-                        <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-secondary focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="Masukkan password">
+                        <input type="password" id="login-password" required class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-secondary focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm" placeholder="Masukkan password">
+                        <!-- Fitur Unhide Password -->
+                        <button type="button" onclick="app.togglePasswordVisibility('login-password', 'eye-icon-login')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                            <i class="fas fa-eye" id="eye-icon-login"></i>
+                        </button>
                     </div>
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-primary hover:bg-blue-800 text-white rounded-lg font-medium shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 mt-2">
                     Masuk ke Sistem
                 </button>
             </form>
+            
+            <div class="mt-6 text-center text-xs text-slate-400 border-t border-slate-100 pt-4">
+                <p>Gunakan akun yang sudah dibagikan</p>
+                <p class="mt-1 font-semibold text-slate-600"></p>
+            </div>
         </div>
     </div>
 
-    <div id="dashboard-page" class="hidden h-screen w-full flex bg-slate-50 overflow-hidden">
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="hidden h-screen w-full flex bg-slate-50 overflow-hidden relative">
         
         <!-- Sidebar Navigation -->
-        <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col h-full z-20 shadow-sm transition-transform duration-300 absolute md:relative -translate-x-full md:translate-x-0">
+        <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col h-full z-40 shadow-xl md:shadow-none transition-transform duration-300 fixed md:relative -translate-x-full md:translate-x-0 shrink-0">
             <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-primary">
                 <div class="flex items-center gap-3 text-white">
                     <i class="fas fa-graduation-cap text-2xl"></i>
@@ -103,13 +125,13 @@
                         <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-medium">SMK Bisa</span>
                     </div>
                 </div>
-                <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="md:hidden text-white/80 hover:text-white">
-                    <i class="fas fa-times"></i>
+                <button onclick="app.toggleSidebar()" class="md:hidden text-white/80 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             
             <div class="p-4 flex items-center gap-3 bg-slate-50 border-b border-slate-100">
-                <div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-sm shadow-inner" id="user-avatar">A</div>
+                <div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-sm shadow-inner shrink-0" id="user-avatar">A</div>
                 <div class="flex-1 overflow-hidden">
                     <p class="text-sm font-bold text-slate-800 truncate" id="user-name">Nama User</p>
                     <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold" id="user-role">Role</p>
@@ -127,67 +149,98 @@
             </div>
         </aside>
 
+        <!-- Overlay Sidebar Mobile -->
+        <div id="sidebar-overlay" onclick="app.toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden transition-opacity"></div>
+
+        <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
             
             <!-- Header Mobile Toggle & Page Title -->
-            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 lg:px-8 z-10 shadow-sm">
+            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 lg:px-8 z-10 shadow-sm shrink-0">
                 <div class="flex items-center gap-3">
-                    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="md:hidden text-slate-500 hover:text-slate-800 focus:outline-none bg-slate-100 p-2 rounded-lg">
+                    <button onclick="app.toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800 focus:outline-none bg-slate-100 p-2 rounded-lg">
                         <i class="fas fa-bars"></i>
                     </button>
                     <h2 class="text-lg font-semibold text-slate-800" id="header-title">Dashboard</h2>
                 </div>
-                <div class="text-sm text-slate-500 flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 hidden sm:flex">
-                    <i class="far fa-calendar-alt"></i> <span id="current-date"></span>
+                <div class="flex items-center gap-4">
+                    <button onclick="app.navigate('pesan', 'Kotak Pesan')" class="relative text-slate-500 hover:text-primary transition-colors cursor-pointer focus:outline-none">
+                        <i class="fas fa-envelope text-xl"></i>
+                        <span id="header-badge" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white hidden"></span>
+                    </button>
+                    <div class="text-sm text-slate-500 flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 hidden sm:flex">
+                        <i class="far fa-calendar-alt"></i> <span id="current-date"></span>
+                    </div>
                 </div>
             </header>
 
             <!-- Area Scroll Konten -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative z-0">
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative z-0 bg-slate-50/50">
                 
                 <!-- Halaman: Dashboard -->
                 <div id="page-dashboard" class="page-content">
                     <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 text-white shadow-lg mb-8 relative overflow-hidden">
                         <div class="relative z-10">
                             <h2 class="text-2xl md:text-3xl font-bold mb-2">Selamat Datang, <span id="welcome-name">User</span>! 👋</h2>
-                            <p class="text-blue-100 max-w-xl text-sm md:text-base leading-relaxed">Ini adalah Portal Praktik Kerja Lapangan. Kelola administrasi, jurnal harian, dan monitoring progres PKL dengan lebih mudah dan terstruktur.</p>
+                            <p class="text-blue-100 max-w-xl text-sm md:text-base leading-relaxed">Ini adalah Portal Praktik Kerja Lapangan. Kelola administrasi, jurnal harian, komunikasi, dan monitoring progres PKL dengan lebih mudah.</p>
                         </div>
-                        <!-- Dekorasi Background -->
                         <i class="fas fa-laptop-code absolute -bottom-4 -right-4 text-9xl text-white/10 -rotate-12"></i>
                     </div>
 
-                    <!-- Notifikasi Pesan (Siswa) -->
-                    <div id="dashboard-notification"></div>
-
-                    <!-- Statistik Grid -->
                     <div id="dashboard-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <!-- Statistik di-generate via JS -->
                     </div>
                 </div>
 
-                <!-- Halaman: Data Master (Re-usable untuk Siswa, Guru, IDUKA) -->
+                <!-- Halaman: Data Master -->
                 <div id="page-master" class="page-content hidden">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
                             <h3 id="master-title" class="font-bold text-lg text-slate-800 border-l-4 border-primary pl-3">Data Master</h3>
+                            <button onclick="app.openUserModal()" class="bg-primary hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-colors whitespace-nowrap"><i class="fas fa-plus mr-2"></i>Tambah Data Baru</button>
+                        </div>
+                        
+                        <!-- Panel Bulk Actions (Hanya Admin) -->
+                        <div id="bulk-actions-panel" class="hidden mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-wrap items-center justify-between gap-3">
+                            <span class="text-sm text-blue-800 font-medium"><i class="fas fa-info-circle mr-1"></i> <span id="selected-count">0</span> Data Terpilih</span>
                             <div class="flex gap-2">
-                                <button onclick="app.bulkDeleteUser()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-colors whitespace-nowrap"><i class="fas fa-trash-alt mr-2"></i>Hapus Terpilih</button>
-                                <button onclick="app.openUserModal()" class="bg-primary hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-colors whitespace-nowrap"><i class="fas fa-plus mr-2"></i>Tambah Data Baru</button>
+                                <button onclick="app.openBroadcastModal(true)" class="px-3 py-1.5 bg-secondary hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"><i class="fas fa-paper-plane mr-1"></i> Pesan Broadcast</button>
+                                <button onclick="app.deleteBulkUsers()" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-md transition-colors"><i class="fas fa-trash-alt mr-1"></i> Hapus Massal</button>
                             </div>
                         </div>
+
                         <div class="overflow-x-auto rounded-lg border border-slate-200">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
                                 <thead>
                                     <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200 uppercase tracking-wide">
-                                        <th class="py-3 px-4 w-12 text-center"><input type="checkbox" id="selectAllCheckbox" onclick="app.toggleSelectAll(this)" class="cursor-pointer w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"></th>
-                                        <th class="py-3 px-4 w-12 text-center">No</th>
+                                        <th class="py-3 px-4 w-12 text-center" id="th-checkbox">No</th>
                                         <th class="py-3 px-4">Nama Lengkap</th>
-                                        <th class="py-3 px-4">Username</th>
+                                        <th class="py-3 px-4">Username/Email</th>
                                         <th class="py-3 px-4 w-32 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-master" class="text-sm divide-y divide-slate-100"></tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Halaman: Kotak Pesan -->
+                <div id="page-pesan" class="page-content hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-[calc(100vh-140px)]">
+                        <!-- Header Pesan -->
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+                            <h3 class="font-bold text-lg text-slate-800"><i class="fas fa-envelope text-secondary mr-2"></i> Kotak Pesan</h3>
+                            <button id="btn-compose-msg" onclick="app.openBroadcastModal()" class="bg-primary hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-colors hidden">
+                                <i class="fas fa-pen mr-2"></i> Tulis Pesan
+                            </button>
+                        </div>
+                        
+                        <!-- List Pesan -->
+                        <div class="flex-1 overflow-y-auto p-0 bg-slate-50/30">
+                            <div id="message-list" class="divide-y divide-slate-100">
+                                <!-- Pesan di-generate via JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -198,25 +251,26 @@
                         <div class="w-24 h-24 bg-blue-50 text-secondary rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
                             <i class="fas fa-book-open"></i>
                         </div>
-                        <h2 class="text-2xl font-bold text-slate-800 mb-3">Waktunya Mengisi Jurnal!</h2>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-3">Waktunya Mengisi Laporan!</h2>
                         <p class="text-slate-500 mb-8 leading-relaxed">Catat kegiatan harianmu dengan detail. Pastikan mencakup alat, bahan, deskripsi kegiatan, serta capaian yang didapat hari ini.</p>
                         <button onclick="app.openJournalModal()" class="px-6 py-3 bg-primary hover:bg-blue-800 text-white rounded-lg font-medium shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
-                            <i class="fas fa-pen-alt mr-2"></i> Mulai Tulis Jurnal
+                            <i class="fas fa-pen-alt mr-2"></i> Mulai Tulis Laporan
                         </button>
                     </div>
                 </div>
 
+                <!-- Halaman: Riwayat (Siswa) -->
                 <div id="page-riwayat" class="page-content hidden">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-                        <h3 class="font-bold text-lg mb-6 text-slate-800 border-b pb-3"><i class="fas fa-history text-secondary mr-2"></i>Riwayat Jurnal Harian Saya</h3>
+                        <h3 class="font-bold text-lg mb-6 text-slate-800 border-b pb-3"><i class="fas fa-history text-secondary mr-2"></i>Riwayat Laporan Saya</h3>
                         <div class="overflow-x-auto rounded-lg border border-slate-200">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                                 <thead>
                                     <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200 uppercase tracking-wide">
                                         <th class="py-3 px-4 w-36">Waktu</th>
-                                        <th class="py-3 px-4">Kegiatan Laporan</th>
+                                        <th class="py-3 px-4 min-w-[250px]">Kegiatan Laporan</th>
                                         <th class="py-3 px-4 w-32 text-center">Status</th>
-                                        <th class="py-3 px-4 w-40 text-center">Aksi</th>
+                                        <th class="py-3 px-4 w-36 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-riwayat-siswa" class="text-sm divide-y divide-slate-100"></tbody>
@@ -230,12 +284,12 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                         <h3 class="font-bold text-lg mb-6 text-slate-800 border-b pb-3"><i class="fas fa-tasks text-secondary mr-2"></i>Daftar Laporan Siswa</h3>
                         <div class="overflow-x-auto rounded-lg border border-slate-200">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                                 <thead>
                                     <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200 uppercase tracking-wide">
-                                        <th class="py-3 px-4">Nama Siswa</th>
-                                        <th class="py-3 px-4">Tanggal Laporan</th>
-                                        <th class="py-3 px-4">Deskripsi Singkat</th>
+                                        <th class="py-3 px-4 min-w-[150px]">Nama Siswa</th>
+                                        <th class="py-3 px-4 min-w-[120px]">Tanggal Laporan</th>
+                                        <th class="py-3 px-4 min-w-[200px]">Deskripsi Singkat</th>
                                         <th class="py-3 px-4 w-32 text-center">Status</th>
                                         <th class="py-3 px-4 w-40 text-center">Aksi</th>
                                     </tr>
@@ -246,50 +300,15 @@
                     </div>
                 </div>
 
-                <!-- Halaman: Broadcast Pesan (Guru) -->
-                <div id="page-broadcast" class="page-content hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Form Broadcast -->
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-1 h-fit">
-                            <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3"><i class="fas fa-bullhorn text-primary mr-2"></i>Kirim Broadcast</h3>
-                            <form onsubmit="app.sendBroadcast(event)" class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Isi Pengumuman / Pesan</label>
-                                    <textarea id="broadcastPesan" required rows="5" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm bg-slate-50 resize-none" placeholder="Tuliskan pesan, pengumuman, atau instruksi untuk seluruh siswa bimbingan Anda..."></textarea>
-                                </div>
-                                <button type="submit" class="w-full py-2.5 bg-primary text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-colors text-sm">
-                                    <i class="fas fa-paper-plane mr-2"></i>Kirim Pesan
-                                </button>
-                            </form>
-                        </div>
-                        <!-- Riwayat Broadcast -->
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2">
-                            <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3"><i class="fas fa-history text-secondary mr-2"></i>Riwayat Broadcast</h3>
-                            <div id="list-broadcast" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                                <!-- Render via JS -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Halaman: Kotak Pesan (Siswa) -->
-                <div id="page-pesan" class="page-content hidden">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 max-w-4xl mx-auto">
-                        <h3 class="font-bold text-lg mb-6 text-slate-800 border-b pb-3"><i class="fas fa-envelope text-primary mr-2"></i>Kotak Pesan dari Pembimbing</h3>
-                        <div id="list-pesan-siswa" class="space-y-4">
-                            <!-- Render via JS -->
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Halaman: Pemetaan Bimbingan (Admin) -->
                 <div id="page-pemetaan" class="page-content hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <!-- Form Pemetaan -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-1 h-fit sticky top-0">
-                            <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3"><i class="fas fa-link text-primary mr-2"></i>Buat Pemetaan</h3>
-                            <form onsubmit="app.saveMapping(event)" class="space-y-4">
+                            <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3" id="map-form-title"><i class="fas fa-link text-primary mr-2"></i>Buat Pemetaan Baru</h3>
+                            <form id="formPemetaan" onsubmit="app.saveMapping(event)" class="space-y-4">
+                                <input type="hidden" id="mapUserId">
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Siswa</label>
                                     <select id="mapSiswa" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm bg-slate-50">
@@ -305,9 +324,10 @@
                                     <select id="mapIduka" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm bg-slate-50">
                                     </select>
                                 </div>
-                                <button type="submit" class="w-full py-2.5 mt-2 bg-primary text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-colors text-sm">
-                                    Simpan Pemetaan
-                                </button>
+                                <div class="flex gap-2 mt-2">
+                                    <button type="button" onclick="app.resetMappingForm()" id="btnResetMap" class="hidden flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-medium transition-colors text-sm">Batal</button>
+                                    <button type="submit" id="btnSubmitMap" class="flex-1 py-2.5 bg-primary text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-colors text-sm">Simpan</button>
+                                </div>
                             </form>
                         </div>
 
@@ -315,13 +335,14 @@
                         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2">
                             <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3"><i class="fas fa-list text-primary mr-2"></i>Data Pemetaan Saat Ini</h3>
                             <div class="overflow-x-auto rounded-lg border border-slate-200">
-                                <table class="w-full text-left border-collapse">
+                                <table class="w-full text-left border-collapse whitespace-nowrap">
                                     <thead>
                                         <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200 uppercase tracking-wide">
                                             <th class="py-3 px-4 w-12 text-center">No</th>
                                             <th class="py-3 px-4">Siswa</th>
                                             <th class="py-3 px-4">Guru Pembimbing</th>
                                             <th class="py-3 px-4">Instansi (IDUKA)</th>
+                                            <th class="py-3 px-4 text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="table-pemetaan" class="text-sm divide-y divide-slate-100"></tbody>
@@ -334,7 +355,6 @@
                 <!-- Halaman: Pengaturan Sistem (Admin) -->
                 <div id="page-pengaturan" class="page-content hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        
                         <!-- Form Identitas Sekolah -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                             <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3"><i class="fas fa-school text-primary mr-2"></i>Identitas Sekolah</h3>
@@ -347,7 +367,7 @@
                                     <label class="block text-sm font-medium text-slate-700 mb-1">Alamat Lengkap</label>
                                     <textarea id="setSchoolAddress" required rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm bg-slate-50 resize-none"></textarea>
                                 </div>
-                                <button type="submit" class="w-full py-2.5 mt-2 bg-primary text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-colors text-sm">
+                                <button type="submit" class="w-full py-2.5 mt-2 bg-primary text-white rounded-lg hover:bg-blue-800 font-medium shadow-md transition-colors text-sm flex items-center justify-center">
                                     <i class="fas fa-save mr-2"></i> Simpan Pengaturan
                                 </button>
                             </form>
@@ -356,25 +376,23 @@
                         <!-- Backup & Restore Data -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
                             <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-3"><i class="fas fa-database text-primary mr-2"></i>Backup / Restore CSV</h3>
-                            
                             <div class="space-y-5">
                                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                    <p class="text-sm text-slate-600 mb-3"><b>Backup:</b> Unduh semua data master pengguna (Siswa, Guru, Admin, IDUKA) dalam format file CSV.</p>
+                                    <p class="text-sm text-slate-600 mb-3"><b>Backup:</b> Unduh semua data master pengguna dalam format CSV.</p>
                                     <button onclick="app.backupCSV()" class="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
                                         <i class="fas fa-download"></i> Download CSV Backup
                                     </button>
                                 </div>
 
                                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                    <p class="text-sm text-slate-600 mb-3"><b>Restore:</b> Kembalikan atau tambahkan data pengguna secara massal dari file CSV hasil backup.</p>
+                                    <p class="text-sm text-slate-600 mb-3"><b>Restore:</b> Kembalikan/tambah data pengguna dari file CSV (Disinkron ke Firebase).</p>
                                     <input type="file" id="fileRestoreCsv" accept=".csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-800 mb-3 cursor-pointer"/>
                                     <button onclick="app.restoreCSV()" class="w-full py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-medium shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-upload"></i> Restore Data dari CSV
+                                        <i class="fas fa-upload"></i> Restore Data CSV
                                     </button>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -382,8 +400,54 @@
         </main>
     </div>
 
-    <!-- WADAH MODAL (Pastikan z-index tinggi agar menutupi semuanya) -->
+    <!-- WADAH MODAL -->
     
+    <!-- Modal: Double Verification Confirm -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
+        <div id="confirmModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm transform scale-95 transition-transform duration-300 overflow-hidden text-center p-6">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="font-bold text-lg text-slate-800 mb-2" id="confirmTitle">Konfirmasi</h3>
+            <p class="text-sm text-slate-500 mb-6" id="confirmDesc">Apakah Anda yakin ingin melakukan tindakan ini?</p>
+            <div class="flex gap-3 justify-center">
+                <button type="button" onclick="app.toggleModal('confirmModal', false)" class="px-5 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors w-full">Batal</button>
+                <button type="button" id="confirmBtn" class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium shadow-md transition-colors w-full">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Compose Broadcast Message -->
+    <div id="messageModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
+        <div id="messageModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fas fa-paper-plane text-primary mr-2"></i>Tulis Pesan Broadcast</h3>
+                <button type="button" onclick="app.closeBroadcastModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="formMessage" onsubmit="app.saveMessage(event)" class="p-6 space-y-4">
+                <input type="hidden" id="msgId">
+                <div id="msgTargetContainer">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Target Penerima</label>
+                    <select id="msgTarget" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm mb-1">
+                        <option value="all">Semua Pengguna</option>
+                        <option value="siswa">Semua Siswa</option>
+                        <option value="guru">Semua Guru Pembimbing</option>
+                        <option value="selected" id="optMsgSelected" class="hidden font-bold">Pengguna Terpilih (Data Master)</option>
+                    </select>
+                    <p class="text-xs text-slate-500" id="msgTargetHint">Pesan akan dikirim ke semua pengguna di sistem.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Isi Pesan</label>
+                    <textarea id="msgContent" required rows="5" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Tulis pengumuman atau pesan di sini..."></textarea>
+                </div>
+                <div class="pt-4 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="app.closeBroadcastModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm font-medium">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 text-sm font-medium shadow-md"><i class="fas fa-send mr-1"></i> Kirim Pesan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal: Form User -->
     <div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
         <div id="userModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform duration-300 overflow-hidden">
@@ -398,12 +462,17 @@
                     <input type="text" id="userName" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email / Username</label>
                     <input type="text" id="userUsername" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                    <input type="password" id="userPassword" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
+                    <div class="relative">
+                        <input type="password" id="userPassword" required class="w-full pl-3 pr-10 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
+                        <button type="button" onclick="app.togglePasswordVisibility('userPassword', 'eye-icon-user')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                            <i class="fas fa-eye" id="eye-icon-user"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="pt-4 flex justify-end gap-2 border-t border-slate-100">
                     <button type="button" onclick="app.closeUserModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm font-medium">Batal</button>
@@ -415,89 +484,97 @@
 
     <!-- Modal: Form Jurnal (Siswa) -->
     <div id="journalModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
-        <div id="journalModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
-            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center z-10 shadow-sm">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fas fa-edit text-primary mr-2"></i>Tulis Jurnal Harian</h3>
+        <div id="journalModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300">
+            <div class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center z-10 shadow-sm shrink-0 rounded-t-2xl">
+                <h3 class="font-bold text-lg text-slate-800" id="jTitleForm"><i class="fas fa-edit text-primary mr-2"></i>Tulis Laporan Harian</h3>
                 <button type="button" onclick="app.closeJournalModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <form id="formJurnal" onsubmit="app.saveJournal(event)" class="p-6 space-y-5">
-                <input type="hidden" id="jId">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Kegiatan</label>
-                        <input type="date" id="jTanggal" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Pembimbing Lapangan</label>
-                        <input type="text" id="jPembimbing" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm" placeholder="Nama pembimbing lapangan">
-                    </div>
+            <div class="overflow-y-auto p-6">
+                <!-- Info Revisi -->
+                <div id="jRevisiAlert" class="hidden mb-5 bg-red-50 border border-red-200 p-4 rounded-lg">
+                    <h4 class="text-red-700 font-bold text-sm mb-1"><i class="fas fa-exclamation-circle mr-1"></i> Laporan Butuh Revisi</h4>
+                    <p class="text-sm text-red-600 italic" id="jRevisiPesan"></p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Durasi Kegiatan</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="jDurasi" required min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm" placeholder="Jumlah durasi">
-                            <select id="jDurasiSatuan" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
-                                <option value="Jam">Jam</option>
-                                <option value="Hari">Hari</option>
-                                <option value="Minggu">Minggu</option>
-                            </select>
+
+                <form id="formJurnal" onsubmit="app.saveJournal(event)" class="space-y-5">
+                    <input type="hidden" id="jId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Kegiatan</label>
+                            <input type="date" id="jTanggal" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Pembimbing Lapangan</label>
+                            <input type="text" id="jPembimbing" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm" placeholder="Nama pembimbing lapangan">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Durasi Kegiatan</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="jDurasi" required min="1" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm" placeholder="Jumlah">
+                                <select id="jDurasiSatuan" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm w-32 shrink-0">
+                                    <option value="Jam">Jam</option>
+                                    <option value="Hari">Hari</option>
+                                    <option value="Minggu">Minggu</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Link Dokumentasi (Opsional)</label>
+                            <input type="url" id="jLink" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm" placeholder="URL Google Drive / Foto">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Dokumentasi (Opsional)</label>
-                        <input type="url" id="jLink" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm" placeholder="URL Google Drive / Foto">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Alat & Bahan Penunjang</label>
-                    <textarea id="jAlat" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Sebutkan alat dan bahan yang digunakan..."></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Kegiatan Lengkap</label>
-                    <textarea id="jDeskripsi" required rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Ceritakan apa saja yang kamu kerjakan hari ini..."></textarea>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Hasil yang Diharapkan</label>
-                        <textarea id="jHarapan" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Tujuan awal kegiatan ini apa?"></textarea>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Alat & Bahan Penunjang</label>
+                        <textarea id="jAlat" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Sebutkan alat dan bahan yang digunakan..."></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Hasil yang Dicapai</label>
-                        <textarea id="jCapai" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Apakah berhasil? Apa kendalanya?"></textarea>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Deskripsi Kegiatan Lengkap</label>
+                        <textarea id="jDeskripsi" required rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Ceritakan apa saja yang kamu kerjakan hari ini..."></textarea>
                     </div>
-                </div>
-                <div class="pt-4 flex justify-end gap-2 border-t border-slate-100">
-                    <button type="button" onclick="app.closeJournalModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm font-medium">Batal</button>
-                    <button type="submit" id="btnSubmitJurnal" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 text-sm font-medium shadow-md">Kirim Jurnal</button>
-                </div>
-            </form>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Hasil yang Diharapkan</label>
+                            <textarea id="jHarapan" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Tujuan awal kegiatan ini apa?"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Hasil yang Dicapai</label>
+                            <textarea id="jCapai" required rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Apakah berhasil? Apa kendalanya?"></textarea>
+                        </div>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="app.closeJournalModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm font-medium">Batal</button>
+                        <button type="submit" id="btnSubmitJurnal" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 text-sm font-medium shadow-md">Kirim Laporan</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Modal: Review Jurnal (Guru) -->
     <div id="reviewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
-        <div id="reviewModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 transition-transform duration-300 overflow-hidden">
-            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <div id="reviewModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 transition-transform duration-300 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
                 <h3 class="font-bold text-lg text-slate-800">Review Laporan Siswa</h3>
                 <button type="button" onclick="app.closeReviewModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="p-6 max-h-[60vh] overflow-y-auto" id="reviewDetailContent">
+            <div class="p-6 overflow-y-auto flex-1" id="reviewDetailContent">
                 <!-- Konten Detail diinjeksi via JS -->
             </div>
-            <form onsubmit="app.saveReview(event)" class="bg-slate-50 p-6 border-t border-slate-200 space-y-4">
+            <form onsubmit="app.saveReview(event)" class="bg-slate-50 p-6 border-t border-slate-200 space-y-4 shrink-0">
                 <input type="hidden" id="revJurnalId">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Keputusan Review</label>
-                    <select id="revStatus" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm bg-white font-medium">
+                    <select id="revStatus" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm bg-white font-medium">
                         <option value="Pending">Tetap Pending (Belum diputuskan)</option>
                         <option value="Disetujui" class="text-green-600 font-bold">Terima & Setujui</option>
                         <option value="Revisi" class="text-red-600 font-bold">Tolak & Minta Revisi</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Catatan Tambahan (Opsional)</label>
-                    <textarea id="revKomentar" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Berikan saran atau revisi jika diperlukan..."></textarea>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Catatan Tambahan (Wajib jika Revisi)</label>
+                    <textarea id="revKomentar" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm resize-none" placeholder="Berikan saran atau revisi..."></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="app.closeReviewModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium">Batal</button>
@@ -510,29 +587,28 @@
     <!-- Modal: Detail Jurnal Lengkap (Siswa) -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
         <div id="detailModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 transition-transform duration-300 overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800">Detail Laporan Jurnal</h3>
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg text-slate-800">Detail Laporan</h3>
                 <button type="button" onclick="app.closeDetailModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto flex-1" id="detailStudentContent">
                 <!-- Konten diinjeksi via JS -->
             </div>
-            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 shrink-0">
                 <button type="button" onclick="app.closeDetailModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium shadow-sm">Tutup</button>
                 <button type="button" id="btnCetakSiswa" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 text-sm font-medium shadow-md flex items-center"><i class="fas fa-print mr-2"></i> Cetak PDF</button>
             </div>
         </div>
     </div>
 
-    <div id="printAreaWrapper" class="fixed -z-50 top-0 left-0 w-[800px] bg-white opacity-0 pointer-events-none">
+    <!-- Print Area Tersembunyi -->
+    <div id="printAreaWrapper" class="absolute -left-[9999px] top-0 w-[800px] bg-white pointer-events-none overflow-hidden">
         <div id="printDocument" class="p-10 font-serif text-black bg-white">
-            <!-- Kop Surat -->
             <div class="text-center border-b-4 border-black pb-4 mb-6">
                 <h1 class="text-2xl font-bold uppercase tracking-wide" id="pdfSchoolName">NAMA SEKOLAH</h1>
                 <p class="text-sm mt-1" id="pdfSchoolAddress">Alamat Sekolah</p>
                 <p class="text-sm font-semibold mt-4 text-lg">JURNAL KEGIATAN PRAKTIK KERJA LAPANGAN (PKL)</p>
             </div>
-            <!-- Identitas -->
             <div class="mb-6">
                 <table class="text-sm w-full">
                     <tr><td class="w-40 py-1">Nama Siswa</td><td class="px-2 w-4">:</td><td class="font-bold" id="pdfNama"></td></tr>
@@ -540,7 +616,6 @@
                     <tr><td class="w-40 py-1">Pembimbing Lapangan</td><td class="px-2">:</td><td id="pdfPembimbing"></td></tr>
                 </table>
             </div>
-            <!-- Isi Konten -->
             <table class="w-full border-collapse border border-black text-sm mb-6">
                 <tbody>
                     <tr><td class="border border-black p-3 font-bold w-1/3 bg-gray-100">Durasi Kegiatan</td><td class="border border-black p-3" id="pdfDurasi"></td></tr>
@@ -552,7 +627,6 @@
                     <tr><td class="border border-black p-3 font-bold bg-gray-100">Catatan Guru</td><td class="border border-black p-3 italic text-gray-700" id="pdfCatatan"></td></tr>
                 </tbody>
             </table>
-            <!-- Tanda Tangan -->
             <div class="flex justify-between mt-16 text-sm text-center px-10">
                 <div class="w-48">
                     <p class="mb-20">Mengetahui,<br>Pembimbing Lapangan</p>
@@ -566,21 +640,42 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-[70] bg-slate-800 text-white px-5 py-3 rounded-lg shadow-xl flex items-center gap-3">
         <i class="fas fa-info-circle text-secondary"></i>
         <span id="toast-message" class="text-sm font-medium">Pesan notifikasi</span>
     </div>
 
-    <script>
-        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI BAWAH INI:
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyS7KiArn_6ehqewQA1wMLOnBWVFnC9kDvQt_ljggk4WasxASqPt4uRsgBZGHF6O19TEg/exec";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTbdnKYoTlwcNkuPC3NrgAUiMTebL4Zgo",
+            authDomain: "portal-pkl-615dc.firebaseapp.com",
+            projectId: "portal-pkl-615dc",
+            storageBucket: "portal-pkl-615dc.firebasestorage.app",
+            messagingSenderId: "563655959417",
+            appId: "1:563655959417:web:b9826ac4398cb4915ec5a8",
+            measurementId: "G-LDLWNXGT8R"
+        };
+        
+        const firebaseApp = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(firebaseApp);
+        const auth = getAuth(firebaseApp);
+        const db = getFirestore(firebaseApp);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'portal-pkl-615dc';
 
         const app = {
-            db: { users: [], journals: [], settings: { schoolName: 'SMK NEGERI 1 DEMO', address: 'Jl. Pendidikan No. 1, Kota Belajar' }, messages: [] },
+            db: { users: [], journals: [], settings: { schoolName: 'Belum Diatur', address: 'Belum Diatur' }, messages: [] },
             currentUser: null,
-            currentView: '',
+            currentView: 'dashboard',
+            firebaseUser: null,
+            unsubscribers: [],
 
-            // Konfigurasi Menu Sidebar per Role
+            // Menu configuration
             MENU: {
                 admin: [
                     { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
@@ -588,106 +683,164 @@
                     { id: 'guru', icon: 'fa-chalkboard-teacher', label: 'Data Guru' },
                     { id: 'iduka', icon: 'fa-building', label: 'Data IDUKA' },
                     { id: 'pemetaan', icon: 'fa-network-wired', label: 'Pemetaan Bimbingan' },
+                    { id: 'pesan', icon: 'fa-envelope', label: 'Kotak Pesan' },
                     { id: 'pengaturan', icon: 'fa-cog', label: 'Pengaturan Sistem' }
                 ],
                 guru: [
                     { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
                     { id: 'progres', icon: 'fa-tasks', label: 'Review Jurnal Siswa' },
-                    { id: 'broadcast', icon: 'fa-bullhorn', label: 'Broadcast Pesan' }
+                    { id: 'pesan', icon: 'fa-envelope', label: 'Kotak Pesan' }
                 ],
                 siswa: [
                     { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
-                    { id: 'jurnal', icon: 'fa-edit', label: 'Isi Jurnal Baru' },
-                    { id: 'riwayat', icon: 'fa-history', label: 'Riwayat Jurnal' },
+                    { id: 'jurnal', icon: 'fa-edit', label: 'Isi Laporan Baru' },
+                    { id: 'riwayat', icon: 'fa-history', label: 'Riwayat Laporan' },
                     { id: 'pesan', icon: 'fa-envelope', label: 'Kotak Pesan' }
                 ]
             },
 
             init() {
-                // Set default tanggal hari ini
                 const now = new Date();
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', options);
-
-                // Fetch data menggunakan REST API ke Web App Google Apps Script
-                if (GAS_API_URL && GAS_API_URL.startsWith('http')) {
-                    fetch(GAS_API_URL + '?action=get')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data) {
-                                this.db = typeof data === 'string' ? JSON.parse(data) : data;
-                                localStorage.setItem('pkl_database', JSON.stringify(this.db));
-                            }
-                            this.processLoginState();
-                        })
-                        .catch(err => {
-                            console.error('Error saat load data dari GAS:', err);
-                            this.loadDb();
-                            this.processLoginState();
-                        });
-                } else {
-                    this.loadDb();
-                    this.processLoginState();
-                }
+                this.initFirebase();
             },
 
-            processLoginState() {
-                // Cek status sesi (otomatis login jika ada session aktif)
-                const savedSession = localStorage.getItem('pkl_session');
-                if (savedSession) {
-                    this.currentUser = JSON.parse(savedSession);
-                    this.showDashboard();
-                }
-            },
-
-            loadDb() {
-                const data = localStorage.getItem('pkl_database');
-                if (data) {
-                    this.db = JSON.parse(data);
-                    
-                    // PERBAIKAN: Jika sebelumnya ada data lama dengan password '123' atau admin belum ada, kita tindih
-                    let adminUser = this.db.users.find(u => u.username === 'admin');
-                    if (!adminUser) {
-                        this.db.users.push({ id: 1, name: 'Administrator', username: 'admin', password: 'Admin123.', role: 'admin' });
-                        this.saveDb();
-                    } else if (adminUser.password === '123') {
-                        adminUser.password = 'Admin123.'; // Update secara paksa ke sandi baru
-                        this.saveDb();
+            async initFirebase() {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } catch (err) {
+                            console.warn("Gagal custom token, beralih anonim:", err);
+                            await signInAnonymously(auth);
+                        }
+                    } else {
+                        await signInAnonymously(auth);
                     }
+                } catch (error) {
+                    console.error("Auth Error:", error);
+                    this.updateConnectionStatus('offline');
+                }
 
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        this.firebaseUser = user;
+                        this.listenData();
+                        
+                        const savedSession = localStorage.getItem('pkl_session');
+                        if (savedSession) {
+                            this.currentUser = JSON.parse(savedSession);
+                            this.showDashboard();
+                        }
+                    } else {
+                        this.firebaseUser = null;
+                        this.unsubscribers.forEach(unsub => unsub());
+                        this.unsubscribers = [];
+                    }
+                });
+            },
+
+            listenData() {
+                // Listener Users
+                const unsubUsers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users'), (snapshot) => {
+                    this.updateConnectionStatus('online');
+                    this.db.users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    this.refreshActiveView();
+                }, (err) => {
+                    this.updateConnectionStatus('offline');
+                    console.error(err);
+                });
+
+                // Listener Journals
+                const unsubJournals = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'journals'), (snapshot) => {
+                    this.db.journals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    this.refreshActiveView();
+                }, (err) => console.error(err));
+
+                // Listener Settings
+                const unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'general'), (docSnap) => {
+                    if (docSnap.exists()) this.db.settings = docSnap.data();
+                    this.refreshActiveView();
+                }, (err) => console.error(err));
+
+                // Listener Messages (Kotak Pesan)
+                const unsubMessages = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'messages'), (snapshot) => {
+                    this.db.messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    this.refreshActiveView();
+                    this.updateUnreadBadge();
+                }, (err) => console.error(err));
+
+                this.unsubscribers.push(unsubUsers, unsubJournals, unsubSettings, unsubMessages);
+            },
+
+            updateConnectionStatus(status) {
+                const dot = document.getElementById('connection-dot');
+                const text = document.getElementById('connection-text');
+                if (!dot || !text) return;
+                if (status === 'online') {
+                    dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                    text.textContent = 'ONLINE';
+                    text.classList.replace('text-slate-600', 'text-green-600') || text.classList.replace('text-red-600', 'text-green-600');
                 } else {
-                    // Setup Data Default: Hanya akun Administrator
-                    this.db.users = [
-                        { id: 1, name: 'Administrator', username: 'admin', password: 'Admin123.', role: 'admin' }
-                    ];
-                    this.saveDb();
+                    dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                    text.textContent = 'OFFLINE';
+                    text.classList.replace('text-slate-600', 'text-red-600') || text.classList.replace('text-green-600', 'text-red-600');
                 }
             },
 
-            saveDb() {
-                // Simpan ke memory lokal (agar aplikasi tetap responsif)
-                localStorage.setItem('pkl_database', JSON.stringify(this.db));
-                
-                // Fetch POST ke GAS
-                if (GAS_API_URL && GAS_API_URL.startsWith('http')) {
-                    fetch(GAS_API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8', 
-                        },
-                        body: JSON.stringify({
-                            action: 'save',
-                            data: JSON.stringify(this.db)
-                        })
-                    }).catch(err => console.error('Error saat save data ke GAS:', err));
+            refreshActiveView() {
+                if (!this.currentUser) return;
+                const updatedMe = this.db.users.find(u => u.id === this.currentUser.id);
+                if (updatedMe) {
+                    this.currentUser = updatedMe;
+                    localStorage.setItem('pkl_session', JSON.stringify(updatedMe));
+                    document.getElementById('user-name').textContent = updatedMe.name;
+                    document.getElementById('welcome-name').textContent = updatedMe.name;
+                }
+
+                if (this.currentView === 'dashboard') this.renderDashboard();
+                else if (['siswa', 'guru', 'iduka'].includes(this.currentView)) this.renderTable(this.currentView);
+                else if (this.currentView === 'riwayat') this.renderRiwayatSiswa();
+                else if (this.currentView === 'progres') this.renderReviewTable();
+                else if (this.currentView === 'pemetaan') this.renderPemetaan();
+                else if (this.currentView === 'pengaturan') this.renderPengaturan();
+                else if (this.currentView === 'pesan') this.renderPesan();
+            },
+
+            // --- Authentication & Security ---
+            togglePasswordVisibility(inputId, iconId) {
+                const input = document.getElementById(inputId);
+                const icon = document.getElementById(iconId);
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    input.type = "password";
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
                 }
             },
 
-            // --- Authentication ---
-            login(e) {
+            async login(e) {
                 e.preventDefault();
                 const user = document.getElementById('login-username').value;
                 const pass = document.getElementById('login-password').value;
+
+                if (this.db.users.length === 0 && user === 'admin@pklabt.app' && pass === 'Admin123.') {
+                    try {
+                        const newAdmin = { name: 'Administrator', username: 'admin@pklabt.app', password: 'Admin123.', role: 'admin' };
+                        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'users'), newAdmin);
+                        this.currentUser = { id: docRef.id, ...newAdmin };
+                        localStorage.setItem('pkl_session', JSON.stringify(this.currentUser));
+                        document.getElementById('login-form').reset();
+                        this.showDashboard();
+                        this.showToast('Akun Admin pertama berhasil didaftarkan ke Firebase!');
+                        return;
+                    } catch (err) {
+                        this.showToast('Gagal mendaftarkan akun ke Firebase.', 'error');
+                        return;
+                    }
+                }
 
                 const found = this.db.users.find(u => u.username === user && u.password === pass);
                 if (found) {
@@ -697,7 +850,7 @@
                     this.showDashboard();
                     this.showToast(`Selamat datang kembali, ${found.name}!`);
                 } else {
-                    this.showToast('Username atau password salah!', 'error');
+                    this.showToast('Email/Username atau password salah!', 'error');
                 }
             },
 
@@ -706,21 +859,25 @@
                 localStorage.removeItem('pkl_session');
                 document.getElementById('dashboard-page').classList.add('hidden');
                 document.getElementById('login-page').classList.remove('hidden');
-                this.showToast('Anda telah keluar dari sistem.');
             },
 
-            // --- Core Layout Control ---
+            // --- Navigation ---
             showDashboard() {
                 document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('dashboard-page').classList.remove('hidden');
                 
-                // Update profil header sidebar
                 document.getElementById('user-name').textContent = this.currentUser.name;
                 document.getElementById('user-role').textContent = this.currentUser.role;
                 document.getElementById('user-avatar').textContent = this.currentUser.name.charAt(0).toUpperCase();
 
                 this.renderSidebar();
+                this.updateUnreadBadge();
                 this.navigate('dashboard');
+            },
+
+            toggleSidebar() {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+                document.getElementById('sidebar-overlay').classList.toggle('hidden');
             },
 
             renderSidebar() {
@@ -730,61 +887,66 @@
 
                 myMenu.forEach(m => {
                     const btn = document.createElement('button');
-                    btn.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:bg-blue-50 hover:text-primary transition-all text-left group focus:outline-none";
-                    btn.innerHTML = `<i class="fas ${m.icon} w-5 text-center text-slate-400 group-hover:text-secondary transition-colors"></i> <span>${m.label}</span>`;
+                    btn.className = "w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:bg-blue-50 hover:text-primary transition-all text-left group focus:outline-none relative";
+                    
+                    let badgeHTML = '';
+                    if (m.id === 'pesan') {
+                        badgeHTML = `<span id="sidebar-badge-pesan" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>`;
+                    }
+
+                    btn.innerHTML = `<div class="flex items-center gap-3"><i class="fas ${m.icon} w-5 text-center text-slate-400 group-hover:text-secondary transition-colors"></i> <span>${m.label}</span></div> ${badgeHTML}`;
+                    
                     btn.onclick = () => {
                         this.navigate(m.id, m.label);
-                        // Auto close sidebar di mobile
-                        if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('-translate-x-full');
+                        if(window.innerWidth < 768) this.toggleSidebar();
                     };
                     menuContainer.appendChild(btn);
                 });
             },
 
             navigate(pageId, label = '') {
-                // Sembunyikan semua konten
                 document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-                
                 if(label) document.getElementById('header-title').textContent = label;
 
-                // Routing Pages
                 let targetEl = document.getElementById(`page-${pageId}`);
-                
-                // Jika pageId adalah role master data, arahkan ke page-master
                 if(['siswa', 'guru', 'iduka'].includes(pageId)) {
                     targetEl = document.getElementById('page-master');
-                    this.currentView = pageId; // simpan referensi role yg sdg dibuka
+                    this.currentView = pageId;
+                } else {
+                    this.currentView = pageId;
                 }
 
                 if(targetEl) {
                     targetEl.classList.remove('hidden');
+                    this.refreshActiveView();
                     
-                    // Trigger renderer khusus sesuai halaman
-                    if (pageId === 'dashboard') this.renderDashboard();
-                    else if (['siswa', 'guru', 'iduka'].includes(pageId)) this.renderTable(pageId);
-                    else if (pageId === 'riwayat') this.renderRiwayatSiswa();
-                    else if (pageId === 'progres') this.renderReviewTable();
-                    else if (pageId === 'pemetaan') this.renderPemetaan();
-                    else if (pageId === 'pengaturan') this.renderPengaturan();
-                    else if (pageId === 'broadcast') this.renderBroadcastGuru();
-                    else if (pageId === 'pesan') this.renderKotakPesanSiswa();
+                    // Mark messages as read if opening inbox
+                    if(pageId === 'pesan') this.markMessagesAsRead();
                 }
             },
 
-            // --- Fitur 1: Dashboard Stats ---
+            // --- Custom Utility Modals ---
+            confirmAction(title, desc, onConfirm) {
+                document.getElementById('confirmTitle').innerText = title;
+                document.getElementById('confirmDesc').innerText = desc;
+                const btn = document.getElementById('confirmBtn');
+                btn.onclick = () => {
+                    onConfirm();
+                    this.toggleModal('confirmModal', false);
+                };
+                this.toggleModal('confirmModal', true);
+            },
+
+            // --- Dashboard Stats ---
             renderDashboard() {
                 document.getElementById('header-title').textContent = 'Dashboard Overview';
-                document.getElementById('welcome-name').textContent = this.currentUser.name;
                 const stats = document.getElementById('dashboard-stats');
-                const notifArea = document.getElementById('dashboard-notification');
                 stats.innerHTML = '';
-                notifArea.innerHTML = '';
 
                 if(this.currentUser.role === 'admin') {
                     const ts = this.db.users.filter(u => u.role === 'siswa').length;
                     const tg = this.db.users.filter(u => u.role === 'guru').length;
                     const tj = this.db.journals.length;
-                    
                     stats.innerHTML = `
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center">
                             <div class="w-12 h-12 rounded-full bg-blue-100 text-primary flex items-center justify-center text-xl mr-4"><i class="fas fa-users"></i></div>
@@ -800,26 +962,9 @@
                         </div>
                     `;
                 } else if (this.currentUser.role === 'siswa') {
-                    // Notifikasi Broadcast Pesan
-                    if(!this.db.messages) this.db.messages = [];
-                    const msgs = this.db.messages.filter(m => m.guruId == this.currentUser.guruId);
-                    if (msgs.length > 0) {
-                        const latestMsg = msgs[msgs.length - 1];
-                        notifArea.innerHTML = `
-                            <div class="bg-blue-50 border-l-4 border-primary p-4 rounded-r-lg mb-6 flex justify-between items-center cursor-pointer hover:bg-blue-100 transition-colors shadow-sm" onclick="app.navigate('pesan', 'Kotak Pesan')">
-                                <div>
-                                    <h4 class="text-sm font-bold text-primary mb-1"><i class="fas fa-bell mr-2 animate-pulse"></i>Pengumuman Baru dari ${latestMsg.guruName}</h4>
-                                    <p class="text-xs text-slate-600 line-clamp-1">${latestMsg.message}</p>
-                                </div>
-                                <i class="fas fa-chevron-right text-slate-400"></i>
-                            </div>
-                        `;
-                    }
-
                     const myJ = this.db.journals.filter(j => j.studentId === this.currentUser.id);
                     const pending = myJ.filter(j => j.status === 'Pending').length;
                     const acc = myJ.filter(j => j.status === 'Disetujui').length;
-
                     stats.innerHTML = `
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center">
                             <div class="w-12 h-12 rounded-full bg-blue-100 text-primary flex items-center justify-center text-xl mr-4"><i class="fas fa-folder-open"></i></div>
@@ -838,7 +983,6 @@
                     const mySiswa = this.db.users.filter(u => u.guruId == this.currentUser.id).map(u => u.id);
                     const jSiswa = this.db.journals.filter(j => mySiswa.includes(j.studentId));
                     const pr = jSiswa.filter(j => j.status === 'Pending').length;
-
                     stats.innerHTML = `
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center">
                             <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl mr-4"><i class="fas fa-user-graduate"></i></div>
@@ -852,130 +996,85 @@
                 }
             },
 
-            // --- Fitur: Broadcast Pesan & Kotak Pesan ---
-            sendBroadcast(e) {
-                e.preventDefault();
-                const msg = document.getElementById('broadcastPesan').value;
-                if(!this.db.messages) this.db.messages = [];
-                
-                const now = new Date();
-                const tglFmt = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-                this.db.messages.push({
-                    id: Date.now(),
-                    guruId: this.currentUser.id,
-                    guruName: this.currentUser.name,
-                    message: msg,
-                    tanggal: tglFmt
-                });
-
-                this.saveDb();
-                document.getElementById('broadcastPesan').value = '';
-                this.renderBroadcastGuru();
-                this.showToast('Pesan broadcast berhasil dikirim ke semua murid!');
-            },
-
-            renderBroadcastGuru() {
-                const container = document.getElementById('list-broadcast');
-                if(!this.db.messages) this.db.messages = [];
-                const myMsgs = this.db.messages.filter(m => m.guruId === this.currentUser.id).sort((a,b) => b.id - a.id);
-                
-                if(myMsgs.length === 0) {
-                    container.innerHTML = `<div class="text-center text-slate-500 py-6">Belum ada pesan broadcast yang Anda kirim.</div>`;
-                    return;
-                }
-
-                container.innerHTML = myMsgs.map(m => `
-                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-xs font-semibold text-primary bg-blue-100 px-2 py-1 rounded">Kepada: Semua Siswa Bimbingan</span>
-                            <span class="text-xs text-slate-500"><i class="far fa-clock mr-1"></i>${m.tanggal}</span>
-                        </div>
-                        <p class="text-sm text-slate-800 whitespace-pre-wrap">${m.message}</p>
-                    </div>
-                `).join('');
-            },
-
-            renderKotakPesanSiswa() {
-                const container = document.getElementById('list-pesan-siswa');
-                if(!this.db.messages) this.db.messages = [];
-                
-                const myGuruId = this.currentUser.guruId;
-                if(!myGuruId) {
-                    container.innerHTML = `<div class="text-center text-slate-500 py-8"><i class="fas fa-info-circle text-4xl mb-3 block text-slate-300"></i>Anda belum dipetakan dengan Guru Pembimbing.</div>`;
-                    return;
-                }
-
-                const msgs = this.db.messages.filter(m => m.guruId == myGuruId).sort((a,b) => b.id - a.id);
-                
-                if(msgs.length === 0) {
-                    container.innerHTML = `<div class="text-center text-slate-500 py-8"><i class="fas fa-envelope-open text-4xl mb-3 block text-slate-300"></i>Kotak pesan kosong.<br>Belum ada informasi dari pembimbing.</div>`;
-                    return;
-                }
-
-                container.innerHTML = msgs.map(m => `
-                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg relative overflow-hidden transition-all hover:shadow-md">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
-                        <div class="flex justify-between items-start mb-3 ml-3 border-b border-slate-200 pb-2">
-                            <span class="text-sm font-bold text-slate-800"><i class="fas fa-user-tie text-secondary mr-2"></i>${m.guruName}</span>
-                            <span class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-100"><i class="far fa-calendar-alt mr-1"></i>${m.tanggal}</span>
-                        </div>
-                        <p class="text-sm text-slate-700 whitespace-pre-wrap ml-3 leading-relaxed">${m.message}</p>
-                    </div>
-                `).join('');
-            },
-
-            // --- Fitur 2: Master Data CRUD ---
+            // --- Master Data (Admin Mass Delete) ---
             renderTable(role) {
                 const labels = { 'siswa': 'Data Siswa', 'guru': 'Data Guru Pembimbing', 'iduka': 'Data Instansi / IDUKA' };
                 document.getElementById('master-title').innerHTML = labels[role];
                 
+                // Setel UI Khusus Admin untuk Mass Delete
+                const isAdmin = this.currentUser.role === 'admin';
+                const bulkPanel = document.getElementById('bulk-actions-panel');
+                const thCheckbox = document.getElementById('th-checkbox');
+                
+                if (isAdmin) {
+                    bulkPanel.classList.remove('hidden');
+                    thCheckbox.innerHTML = `<input type="checkbox" class="custom-checkbox" onchange="app.toggleAllUserCb(this.checked)" title="Pilih Semua">`;
+                    document.getElementById('selected-count').innerText = "0";
+                } else {
+                    bulkPanel.classList.add('hidden');
+                    thCheckbox.innerHTML = `No`;
+                }
+
                 const tbody = document.getElementById('table-master');
                 tbody.innerHTML = '';
-                
                 const data = this.db.users.filter(u => u.role === role);
                 
                 if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-500">Belum ada data ${role}.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-500">Belum ada data ${role}.</td></tr>`;
                     return;
                 }
 
                 data.forEach((u, i) => {
+                    const firstCol = isAdmin ? `<input type="checkbox" class="custom-checkbox user-cb" value="${u.id}" onchange="app.updateSelectedCount()">` : `${i+1}`;
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 text-center"><input type="checkbox" class="row-checkbox cursor-pointer w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary" value="${u.id}"></td>
-                            <td class="py-3 px-4 text-center text-slate-500 font-medium">${i+1}</td>
+                            <td class="py-3 px-4 text-center text-slate-500">${firstCol}</td>
                             <td class="py-3 px-4 font-semibold text-slate-800">${u.name}</td>
                             <td class="py-3 px-4 text-slate-600"><span class="bg-slate-100 px-2 py-1 rounded text-xs border border-slate-200"><i class="fas fa-user text-slate-400 mr-1"></i>${u.username}</span></td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
-                                <button onclick="app.editUser(${u.id})" class="p-2 text-secondary hover:text-blue-800 transition-colors" title="Edit Data"><i class="fas fa-edit"></i></button>
-                                <button onclick="app.deleteUser(${u.id})" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                                <button onclick="app.editUser('${u.id}')" class="p-2 text-secondary hover:text-blue-800 transition-colors" title="Edit Data"><i class="fas fa-edit"></i></button>
+                                <button onclick="app.deleteUser('${u.id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Hapus"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>
                     `;
                 });
             },
 
-            toggleSelectAll(el) {
-                const checkboxes = document.querySelectorAll('.row-checkbox');
-                checkboxes.forEach(cb => cb.checked = el.checked);
+            toggleAllUserCb(checked) {
+                document.querySelectorAll('.user-cb').forEach(cb => cb.checked = checked);
+                this.updateSelectedCount();
+            },
+            
+            updateSelectedCount() {
+                const count = document.querySelectorAll('.user-cb:checked').length;
+                document.getElementById('selected-count').innerText = count;
             },
 
-            bulkDeleteUser() {
-                const selected = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => parseInt(cb.value));
-                if(selected.length === 0) {
-                    this.showToast('Pilih minimal satu data untuk dihapus!', 'error');
+            async deleteBulkUsers() {
+                const checked = document.querySelectorAll('.user-cb:checked');
+                if (checked.length === 0) {
+                    this.showToast('Pilih setidaknya satu data untuk dihapus!', 'error');
                     return;
                 }
-                if(confirm(`Apakah Anda yakin ingin menghapus ${selected.length} data terpilih?`)) {
-                    this.db.users = this.db.users.filter(u => !selected.includes(u.id));
-                    this.saveDb();
-                    this.renderTable(this.currentView);
-                    document.getElementById('selectAllCheckbox').checked = false;
-                    this.showToast(`${selected.length} data berhasil dihapus!`);
-                }
+                
+                this.confirmAction('Hapus Massal', `Yakin ingin menghapus ${checked.length} data pengguna terpilih? Data tidak bisa dikembalikan.`, async () => {
+                    this.showToast('Memproses hapus massal...', 'success');
+                    try {
+                        const batch = writeBatch(db);
+                        checked.forEach(cb => {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', cb.value);
+                            batch.delete(docRef);
+                        });
+                        await batch.commit();
+                        this.showToast(`${checked.length} data berhasil dihapus!`);
+                    } catch (err) {
+                        this.showToast('Terjadi kesalahan saat hapus massal.', 'error');
+                        console.error(err);
+                    }
+                });
             },
 
+            // --- User Modal (Single CRUD) ---
             openUserModal(id = null) {
                 document.getElementById('formUser').reset();
                 const titleEl = document.querySelector('#userModalContent h3');
@@ -995,101 +1094,294 @@
                 }
                 this.toggleModal('userModal', true);
             },
-            
-            editUser(id) {
-                this.openUserModal(id);
-            },
-            
+            editUser(id) { this.openUserModal(id); },
             closeUserModal() { this.toggleModal('userModal', false); },
             
-            saveUser(e) {
+            async saveUser(e) {
                 e.preventDefault();
                 const id = document.getElementById('userId').value;
                 const name = document.getElementById('userName').value;
                 const username = document.getElementById('userUsername').value;
                 const password = document.getElementById('userPassword').value;
                 
-                // Validasi username unik
                 const existingUser = this.db.users.find(u => u.username === username);
-                if(existingUser && existingUser.id != id) {
-                    this.showToast('Username sudah dipakai, gunakan yang lain!', 'error');
+                if(existingUser && existingUser.id !== id) {
+                    this.showToast('Email/Username sudah dipakai!', 'error');
                     return;
                 }
 
-                if (id) {
-                    // Update data
-                    const index = this.db.users.findIndex(u => u.id == id);
-                    if (index !== -1) {
-                        this.db.users[index].name = name;
-                        this.db.users[index].username = username;
-                        this.db.users[index].password = password;
+                try {
+                    if (id) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', id), { name, username, password });
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'users'), { name, username, password, role: this.currentView });
                     }
-                } else {
-                    // Insert data baru
-                    this.db.users.push({
-                        id: Date.now(),
-                        name, username, password, role: this.currentView
-                    });
-                }
-                
-                this.saveDb();
-                this.closeUserModal();
-                this.renderTable(this.currentView);
-                this.showToast('Data berhasil disimpan!');
+                    this.closeUserModal();
+                    this.showToast('Data berhasil disimpan!');
+                } catch (err) { this.showToast('Gagal menyimpan data!', 'error'); }
             },
             
-            deleteUser(id) {
-                this.db.users = this.db.users.filter(u => u.id !== id);
-                this.saveDb();
-                this.renderTable(this.currentView);
-                this.showToast('Data dihapus!');
+            async deleteUser(id) {
+                this.confirmAction('Hapus Data Pengguna', 'Yakin ingin menghapus pengguna ini?', async () => {
+                    try {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', id));
+                        this.showToast('Data dihapus!');
+                    } catch (err) { this.showToast('Gagal menghapus data!', 'error'); }
+                });
             },
 
-            // --- Fitur 3: Input Jurnal (Siswa) ---
+            // --- Fitur Pesan & Broadcast (Inbox) ---
+            renderPesan() {
+                const list = document.getElementById('message-list');
+                const btnCompose = document.getElementById('btn-compose-msg');
+                list.innerHTML = '';
+                
+                if (['admin', 'guru'].includes(this.currentUser.role)) {
+                    btnCompose.classList.remove('hidden');
+                } else {
+                    btnCompose.classList.add('hidden');
+                }
+
+                // Filter pesan yang relevan untuk user ini
+                let myMsgs = this.db.messages.filter(m => {
+                    if (m.senderId === this.currentUser.id) return true; // Sent messages
+                    if (m.receiverIds === 'all') return true;
+                    if (m.receiverIds === this.currentUser.role) return true;
+                    if (Array.isArray(m.receiverIds) && m.receiverIds.includes(this.currentUser.id)) return true;
+                    return false;
+                });
+
+                // Sort descending
+                myMsgs.sort((a,b) => b.timestamp - a.timestamp);
+
+                if (myMsgs.length === 0) {
+                    list.innerHTML = `<div class="py-12 text-center text-slate-500"><i class="fas fa-envelope-open text-4xl mb-3 text-slate-300 block"></i>Belum ada pesan masuk.</div>`;
+                    return;
+                }
+
+                myMsgs.forEach(m => {
+                    const isSender = m.senderId === this.currentUser.id;
+                    const dateFmt = new Date(m.timestamp).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'});
+                    
+                    let actionBtns = '';
+                    if(isSender) {
+                        actionBtns = `
+                            <button onclick="app.editMessage('${m.id}')" class="text-slate-400 hover:text-secondary p-1"><i class="fas fa-edit"></i></button>
+                            <button onclick="app.deleteMessage('${m.id}')" class="text-slate-400 hover:text-red-500 p-1"><i class="fas fa-trash"></i></button>
+                        `;
+                    }
+
+                    let icon = isSender ? '<i class="fas fa-paper-plane text-blue-400"></i>' : '<i class="fas fa-envelope text-accent"></i>';
+                    let label = isSender ? `Terkirim (Oleh Anda)` : `Dari: ${m.senderName} (${m.senderRole.toUpperCase()})`;
+
+                    list.innerHTML += `
+                        <div class="p-5 hover:bg-white transition-colors flex flex-col md:flex-row gap-4 justify-between group">
+                            <div class="flex gap-4">
+                                <div class="mt-1 flex-shrink-0">${icon}</div>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-bold text-slate-800 text-sm">${label}</span>
+                                        <span class="text-xs text-slate-400"><i class="far fa-clock mr-1"></i>${dateFmt}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-700 whitespace-pre-wrap">${m.content}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                ${actionBtns}
+                            </div>
+                        </div>
+                    `;
+                });
+            },
+
+            openBroadcastModal(fromSelection = false) {
+                document.getElementById('formMessage').reset();
+                document.getElementById('msgId').value = '';
+                const targetSelect = document.getElementById('msgTarget');
+                const targetHint = document.getElementById('msgTargetHint');
+                const optSelected = document.getElementById('optMsgSelected');
+                
+                // Pengaturan Dropdown khusus Role
+                if (this.currentUser.role === 'guru') {
+                    document.getElementById('msgTargetContainer').classList.add('hidden');
+                    // Guru otomatis kirim ke siswa bimbingannya (di-handle di save)
+                } else {
+                    document.getElementById('msgTargetContainer').classList.remove('hidden');
+                    if (fromSelection) {
+                        const checked = document.querySelectorAll('.user-cb:checked');
+                        if (checked.length === 0) {
+                            this.showToast('Pilih setidaknya 1 pengguna dari tabel untuk dikirimi pesan.', 'error');
+                            return;
+                        }
+                        optSelected.classList.remove('hidden');
+                        targetSelect.value = 'selected';
+                        targetHint.innerText = `Pesan akan dikirim ke ${checked.length} pengguna yang Anda ceklis di tabel.`;
+                    } else {
+                        optSelected.classList.add('hidden');
+                        targetSelect.value = 'all';
+                        targetHint.innerText = `Pesan akan dikirim ke seluruh pengguna.`;
+                    }
+                }
+                
+                this.toggleModal('messageModal', true);
+            },
+            closeBroadcastModal() { this.toggleModal('messageModal', false); },
+
+            async saveMessage(e) {
+                e.preventDefault();
+                const id = document.getElementById('msgId').value;
+                const content = document.getElementById('msgContent').value;
+                let receiverIds = 'all';
+
+                if (this.currentUser.role === 'guru') {
+                    // Guru: Kirim hanya ke siswa bimbingannya
+                    const mySiswa = this.db.users.filter(u => u.guruId === this.currentUser.id).map(u => u.id);
+                    if (mySiswa.length === 0) {
+                        this.showToast('Anda belum memiliki siswa bimbingan!', 'error');
+                        return;
+                    }
+                    receiverIds = mySiswa;
+                } else {
+                    // Admin
+                    const t = document.getElementById('msgTarget').value;
+                    if (t === 'selected') {
+                        receiverIds = Array.from(document.querySelectorAll('.user-cb:checked')).map(cb => cb.value);
+                    } else {
+                        receiverIds = t; // 'all', 'siswa', 'guru'
+                    }
+                }
+
+                const msgData = {
+                    senderId: this.currentUser.id,
+                    senderName: this.currentUser.name,
+                    senderRole: this.currentUser.role,
+                    receiverIds: receiverIds,
+                    content: content,
+                    timestamp: Date.now()
+                };
+
+                try {
+                    if (id) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'messages', id), { content: content });
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'messages'), msgData);
+                    }
+                    this.closeBroadcastModal();
+                    this.showToast('Pesan berhasil dikirim!');
+                } catch (err) {
+                    this.showToast('Gagal mengirim pesan', 'error');
+                }
+            },
+
+            editMessage(id) {
+                const m = this.db.messages.find(x => x.id === id);
+                if (!m) return;
+                document.getElementById('msgId').value = m.id;
+                document.getElementById('msgContent').value = m.content;
+                document.getElementById('msgTargetContainer').classList.add('hidden'); // Sembunyikan target saat edit
+                this.toggleModal('messageModal', true);
+            },
+
+            deleteMessage(id) {
+                this.confirmAction('Hapus Pesan', 'Yakin ingin menarik/menghapus pesan broadcast ini?', async () => {
+                    try {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'messages', id));
+                        this.showToast('Pesan dihapus!');
+                    } catch (err) { this.showToast('Gagal menghapus pesan', 'error'); }
+                });
+            },
+
+            // --- Logika Unread Badge (Pesan) ---
+            getRelevantMessages() {
+                if(!this.currentUser) return [];
+                return this.db.messages.filter(m => {
+                    if (m.senderId === this.currentUser.id) return false; // Jangan hitung pesan sendiri sbg unread
+                    if (m.receiverIds === 'all') return true;
+                    if (m.receiverIds === this.currentUser.role) return true;
+                    if (Array.isArray(m.receiverIds) && m.receiverIds.includes(this.currentUser.id)) return true;
+                    return false;
+                });
+            },
+            updateUnreadBadge() {
+                if (!this.currentUser) return;
+                const relevant = this.getRelevantMessages();
+                const readKey = 'read_msgs_' + this.currentUser.id;
+                const readMsgs = JSON.parse(localStorage.getItem(readKey)) || [];
+                
+                const unreadCount = relevant.filter(m => !readMsgs.includes(m.id)).length;
+                
+                const headerBadge = document.getElementById('header-badge');
+                const sidebarBadge = document.getElementById('sidebar-badge-pesan');
+                
+                if (unreadCount > 0) {
+                    if(headerBadge) headerBadge.classList.remove('hidden');
+                    if(sidebarBadge) {
+                        sidebarBadge.classList.remove('hidden');
+                        sidebarBadge.innerText = unreadCount;
+                    }
+                } else {
+                    if(headerBadge) headerBadge.classList.add('hidden');
+                    if(sidebarBadge) sidebarBadge.classList.add('hidden');
+                }
+            },
+            markMessagesAsRead() {
+                if (!this.currentUser) return;
+                const relevant = this.getRelevantMessages();
+                const readKey = 'read_msgs_' + this.currentUser.id;
+                const readIds = relevant.map(m => m.id);
+                // Simpan ID pesan yang sudah dibaca ke local storage
+                localStorage.setItem(readKey, JSON.stringify(readIds));
+                this.updateUnreadBadge();
+            },
+
+            // --- Input Laporan / Jurnal (Siswa) ---
             openJournalModal(id = null) {
-                const form = document.getElementById('formJurnal');
-                form.reset();
-                const titleEl = document.querySelector('#journalModalContent h3');
-                const btnEl = document.getElementById('btnSubmitJurnal');
+                document.getElementById('formJurnal').reset();
+                document.getElementById('jRevisiAlert').classList.add('hidden');
+                document.getElementById('jId').value = '';
+                document.getElementById('jTitleForm').innerHTML = '<i class="fas fa-edit text-primary mr-2"></i>Tulis Laporan Harian';
+                document.getElementById('btnSubmitJurnal').innerText = "Kirim Laporan";
                 
                 if (id) {
                     const j = this.db.journals.find(x => x.id === id);
                     if (j) {
-                        titleEl.innerHTML = '<i class="fas fa-edit text-primary mr-2"></i>Edit Jurnal Harian';
-                        btnEl.textContent = 'Ajukan Kembali';
                         document.getElementById('jId').value = j.id;
+                        document.getElementById('jTitleForm').innerHTML = '<i class="fas fa-pen text-primary mr-2"></i>Revisi Laporan';
+                        document.getElementById('btnSubmitJurnal').innerText = "Ajukan Ulang";
                         
-                        if (j.tanggalRaw) {
-                            document.getElementById('jTanggal').value = j.tanggalRaw;
-                        } else {
-                            document.getElementById('jTanggal').valueAsDate = new Date();
+                        // Parse back the Date
+                        const parts = j.tanggal.split(' '); // e.g. "15 Juni 2026"
+                        const months = { 'Januari':'01', 'Februari':'02', 'Maret':'03', 'April':'04', 'Mei':'05', 'Juni':'06', 'Juli':'07', 'Agustus':'08', 'September':'09', 'Oktober':'10', 'November':'11', 'Desember':'12' };
+                        if(parts.length === 3) {
+                            let d = parts[0].padStart(2, '0');
+                            let m = months[parts[1]] || '01';
+                            let y = parts[2];
+                            document.getElementById('jTanggal').value = `${y}-${m}-${d}`;
                         }
                         
                         document.getElementById('jPembimbing').value = j.pembimbing;
-                        
-                        // Parse durasi "X Satuan"
-                        const durArr = (j.durasi || '').split(' ');
-                        document.getElementById('jDurasi').value = durArr[0] || '';
-                        document.getElementById('jDurasiSatuan').value = durArr[1] || 'Jam';
-                        
+                        const dr = j.durasi.split(' ');
+                        document.getElementById('jDurasi').value = dr[0] || '';
+                        document.getElementById('jDurasiSatuan').value = dr[1] || 'Jam';
                         document.getElementById('jLink').value = j.link || '';
                         document.getElementById('jAlat').value = j.alat;
                         document.getElementById('jDeskripsi').value = j.deskripsi;
                         document.getElementById('jHarapan').value = j.harapan;
                         document.getElementById('jCapai').value = j.capai;
+
+                        if (j.komentarGuru) {
+                            document.getElementById('jRevisiAlert').classList.remove('hidden');
+                            document.getElementById('jRevisiPesan').innerText = `"${j.komentarGuru}"`;
+                        }
                     }
                 } else {
-                    titleEl.innerHTML = '<i class="fas fa-edit text-primary mr-2"></i>Tulis Jurnal Harian';
-                    btnEl.textContent = 'Kirim Jurnal';
-                    document.getElementById('jId').value = '';
                     document.getElementById('jTanggal').valueAsDate = new Date();
                 }
-                
                 this.toggleModal('journalModal', true);
             },
             closeJournalModal() { this.toggleModal('journalModal', false); },
 
-            saveJournal(e) {
+            async saveJournal(e) {
                 e.preventDefault();
                 const id = document.getElementById('jId').value;
                 const tglRaw = document.getElementById('jTanggal').value;
@@ -1097,100 +1389,83 @@
                 const hari = d.toLocaleDateString('id-ID', { weekday: 'long' });
                 const tglFmt = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-                if (id) {
-                    const index = this.db.journals.findIndex(x => x.id == id);
-                    if (index !== -1) {
-                        this.db.journals[index].hari = hari;
-                        this.db.journals[index].tanggal = tglFmt;
-                        this.db.journals[index].tanggalRaw = tglRaw;
-                        this.db.journals[index].pembimbing = document.getElementById('jPembimbing').value;
-                        this.db.journals[index].alat = document.getElementById('jAlat').value;
-                        this.db.journals[index].durasi = document.getElementById('jDurasi').value + ' ' + document.getElementById('jDurasiSatuan').value;
-                        this.db.journals[index].deskripsi = document.getElementById('jDeskripsi').value;
-                        this.db.journals[index].harapan = document.getElementById('jHarapan').value;
-                        this.db.journals[index].capai = document.getElementById('jCapai').value;
-                        this.db.journals[index].link = document.getElementById('jLink').value;
-                        this.db.journals[index].status = 'Pending';
-                        this.db.journals[index].komentarGuru = '';
+                const dataJ = {
+                    studentId: this.currentUser.id,
+                    studentName: this.currentUser.name,
+                    hari: hari,
+                    tanggal: tglFmt,
+                    pembimbing: document.getElementById('jPembimbing').value,
+                    alat: document.getElementById('jAlat').value,
+                    durasi: document.getElementById('jDurasi').value + ' ' + document.getElementById('jDurasiSatuan').value,
+                    deskripsi: document.getElementById('jDeskripsi').value,
+                    harapan: document.getElementById('jHarapan').value,
+                    capai: document.getElementById('jCapai').value,
+                    link: document.getElementById('jLink').value,
+                    status: 'Pending',
+                    komentarGuru: '' // Reset komentar saat diajukan ulang
+                };
+
+                try {
+                    if (id) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'journals', id), dataJ);
+                        this.showToast('Laporan berhasil diajukan ulang!');
+                    } else {
+                        dataJ.timestamp = Date.now();
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'journals'), dataJ);
+                        this.showToast('Laporan harian berhasil dikirim!');
                     }
-                    this.showToast('Laporan berhasil direvisi dan diajukan kembali!');
-                } else {
-                    const newJ = {
-                        id: Date.now(),
-                        studentId: this.currentUser.id,
-                        studentName: this.currentUser.name,
-                        hari: hari,
-                        tanggal: tglFmt,
-                        tanggalRaw: tglRaw,
-                        pembimbing: document.getElementById('jPembimbing').value,
-                        alat: document.getElementById('jAlat').value,
-                        durasi: document.getElementById('jDurasi').value + ' ' + document.getElementById('jDurasiSatuan').value,
-                        deskripsi: document.getElementById('jDeskripsi').value,
-                        harapan: document.getElementById('jHarapan').value,
-                        capai: document.getElementById('jCapai').value,
-                        link: document.getElementById('jLink').value,
-                        status: 'Pending',
-                        komentarGuru: ''
-                    };
-                    this.db.journals.push(newJ);
-                    this.showToast('Jurnal harian berhasil dikirim!');
-                }
-
-                this.saveDb();
-                this.closeJournalModal();
-                this.navigate('riwayat');
-            },
-            
-            editJournal(id) {
-                this.openJournalModal(id);
-            },
-            
-            deleteJournal(id) {
-                if(confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
-                    this.db.journals = this.db.journals.filter(j => j.id !== id);
-                    this.saveDb();
-                    this.renderRiwayatSiswa();
-                    this.showToast('Laporan berhasil dihapus!');
+                    this.closeJournalModal();
+                    this.navigate('riwayat');
+                } catch (err) {
+                    this.showToast('Gagal mengirim laporan!', 'error');
                 }
             },
 
-            // --- Fitur 4: Riwayat & Review ---
+            async deleteJournalSiswa(id) {
+                this.confirmAction('Hapus Laporan', 'Anda yakin ingin menghapus laporan yang sudah Anda buat? Data yang dihapus tidak bisa dikembalikan.', async () => {
+                    try {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'journals', id));
+                        this.showToast('Laporan berhasil dihapus!');
+                    } catch (err) { this.showToast('Gagal menghapus laporan!', 'error'); }
+                });
+            },
+
+            // --- Riwayat & Review ---
             renderRiwayatSiswa() {
                 const tbody = document.getElementById('table-riwayat-siswa');
                 tbody.innerHTML = '';
-                const myJ = this.db.journals.filter(j => j.studentId === this.currentUser.id).sort((a,b) => b.id - a.id);
+                const myJ = this.db.journals.filter(j => j.studentId === this.currentUser.id).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
                 
                 if(myJ.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-500">Belum ada jurnal yang dilaporkan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-500">Belum ada laporan.</td></tr>`;
                     return;
                 }
 
                 myJ.forEach(j => {
                     let badge = '<span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold whitespace-nowrap"><i class="fas fa-clock mr-1"></i>Pending</span>';
-                    if(j.status === 'Disetujui') badge = '<span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold whitespace-nowrap"><i class="fas fa-check mr-1"></i>Disetujui</span>';
-                    if(j.status === 'Revisi') badge = '<span class="px-2.5 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold whitespace-nowrap"><i class="fas fa-info-circle mr-1"></i>Revisi</span>';
+                    let actionBtn = `<button onclick="app.viewDetail('${j.id}')" class="px-3 py-1 bg-blue-50 text-secondary border border-blue-200 rounded hover:bg-secondary hover:text-white transition-colors text-xs font-medium w-full text-center mb-1"><i class="fas fa-eye"></i> Detail</button>`;
 
-                    let editBtn = j.status === 'Disetujui' 
-                        ? `<button disabled class="px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 rounded cursor-not-allowed text-xs font-medium" title="Sudah disetujui, tidak dapat diedit"><i class="fas fa-edit"></i></button>`
-                        : `<button onclick="app.editJournal(${j.id})" class="px-3 py-1.5 bg-amber-50 text-amber-600 border border-amber-200 rounded hover:bg-amber-500 hover:text-white transition-colors text-xs font-medium" title="Edit Laporan"><i class="fas fa-edit"></i></button>`;
-                    
-                    let deleteBtn = `<button onclick="app.deleteJournal(${j.id})" class="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-500 hover:text-white transition-colors text-xs font-medium" title="Hapus Laporan"><i class="fas fa-trash-alt"></i></button>`;
+                    if(j.status === 'Disetujui') {
+                        badge = '<span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold whitespace-nowrap"><i class="fas fa-check mr-1"></i>Disetujui</span>';
+                        actionBtn += `<button onclick="app.deleteJournalSiswa('${j.id}')" class="px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-500 hover:text-white transition-colors text-xs font-medium w-full text-center"><i class="fas fa-trash"></i> Hapus</button>`;
+                    } else if(j.status === 'Revisi') {
+                        badge = '<span class="px-2.5 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold whitespace-nowrap"><i class="fas fa-info-circle mr-1"></i>Revisi</span>';
+                        actionBtn += `<button onclick="app.openJournalModal('${j.id}')" class="px-3 py-1 bg-amber-50 text-amber-600 border border-amber-200 rounded hover:bg-amber-500 hover:text-white transition-colors text-xs font-medium w-full text-center"><i class="fas fa-edit"></i> Edit Ulang</button>`;
+                    }
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-4 px-4 align-top"><p class="font-bold text-slate-700">${j.hari}</p><p class="text-xs text-slate-500">${j.tanggal}</p></td>
+                        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                            <td class="py-4 px-4 align-top"><p class="font-bold text-slate-700">${j.hari}</p><p class="text-xs text-slate-500 whitespace-nowrap">${j.tanggal}</p></td>
                             <td class="py-4 px-4 align-top">
-                                <p class="font-medium text-slate-800 line-clamp-1 mb-1">${j.deskripsi}</p>
+                                <p class="font-medium text-slate-800 line-clamp-2 mb-2 whitespace-normal">${j.deskripsi}</p>
                                 <div class="text-xs text-slate-500 flex flex-wrap gap-3">
-                                    <span><i class="fas fa-stopwatch mr-1"></i>${j.durasi}</span>
-                                    <span><i class="fas fa-user-tie mr-1"></i>${j.pembimbing}</span>
+                                    <span class="whitespace-nowrap"><i class="fas fa-stopwatch mr-1"></i>${j.durasi}</span>
+                                    <span class="whitespace-nowrap"><i class="fas fa-user-tie mr-1"></i>${j.pembimbing}</span>
                                 </div>
                             </td>
                             <td class="py-4 px-4 text-center align-middle">${badge}</td>
-                            <td class="py-4 px-4 text-center align-middle whitespace-nowrap space-x-1">
-                                <button onclick="app.viewDetail(${j.id})" class="px-3 py-1.5 bg-blue-50 text-secondary border border-blue-200 rounded hover:bg-secondary hover:text-white transition-colors text-xs font-medium" title="Lihat Detail"><i class="fas fa-eye"></i></button>
-                                ${editBtn}
-                                ${deleteBtn}
+                            <td class="py-4 px-4 align-middle">
+                                <div class="flex flex-col gap-1 w-[80px] mx-auto">${actionBtn}</div>
                             </td>
                         </tr>
                     `;
@@ -1205,15 +1480,14 @@
                 if(this.currentUser.role === 'admin') {
                     jList = [...this.db.journals];
                 } else if (this.currentUser.role === 'guru') {
-                    // Filter jurnal milik siswa bimbingannya
                     const mySiswa = this.db.users.filter(u => u.guruId == this.currentUser.id).map(u => u.id);
                     jList = this.db.journals.filter(j => mySiswa.includes(j.studentId));
                 }
 
-                jList.sort((a,b) => b.id - a.id);
+                jList.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
                 
                 if(jList.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-500">Belum ada jurnal yang masuk dari siswa.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-500">Belum ada laporan dari siswa.</td></tr>`;
                     return;
                 }
 
@@ -1223,21 +1497,21 @@
                     if(j.status === 'Revisi') badge = '<span class="px-2.5 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Revisi</span>';
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
                             <td class="py-3 px-4 font-semibold text-slate-800 align-middle"><i class="fas fa-user-circle text-slate-300 mr-2"></i>${j.studentName}</td>
-                            <td class="py-3 px-4 text-slate-600 align-middle">${j.hari}, ${j.tanggal}</td>
-                            <td class="py-3 px-4 align-middle"><p class="line-clamp-1 text-sm">${j.deskripsi}</p></td>
+                            <td class="py-3 px-4 text-slate-600 align-middle whitespace-nowrap">${j.hari}, ${j.tanggal}</td>
+                            <td class="py-3 px-4 align-middle"><p class="line-clamp-2 text-sm whitespace-normal min-w-[200px]">${j.deskripsi}</p></td>
                             <td class="py-3 px-4 text-center align-middle">${badge}</td>
-                            <td class="py-3 px-4 text-center align-middle">
-                                <button onclick="app.openReviewModal(${j.id})" class="px-3 py-1.5 bg-blue-50 text-secondary border border-blue-200 rounded hover:bg-secondary hover:text-white transition-colors text-xs font-medium whitespace-nowrap"><i class="fas fa-check-double mr-1"></i> Review</button>
-                                <button onclick="app.printPDF(${j.id})" class="px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded hover:bg-slate-200 transition-colors text-xs font-medium ml-1" title="Cetak PDF"><i class="fas fa-print"></i></button>
+                            <td class="py-3 px-4 text-center align-middle whitespace-nowrap">
+                                <button onclick="app.openReviewModal('${j.id}')" class="px-3 py-1.5 bg-blue-50 text-secondary border border-blue-200 rounded hover:bg-secondary hover:text-white transition-colors text-xs font-medium"><i class="fas fa-check-double mr-1"></i> Review</button>
+                                <button onclick="app.printPDF('${j.id}')" class="px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded hover:bg-slate-200 transition-colors text-xs font-medium ml-1" title="Cetak PDF"><i class="fas fa-print"></i></button>
                             </td>
                         </tr>
                     `;
                 });
             },
 
-            // --- Fitur 5: Detail & Cetak ---
+            // --- Cetak Detail & Laporan ---
             generateJournalHTML(j) {
                 return `
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
@@ -1277,7 +1551,6 @@
                 const content = document.getElementById('detailStudentContent');
                 content.innerHTML = this.generateJournalHTML(j);
 
-                // Tambahan info feedback
                 let color = j.status === 'Disetujui' ? 'green' : (j.status === 'Revisi' ? 'red' : 'yellow');
                 content.innerHTML += `
                     <div class="mt-6 bg-${color}-50 p-4 rounded-lg border border-${color}-200">
@@ -1302,18 +1575,22 @@
             },
             closeReviewModal() { this.toggleModal('reviewModal', false); },
 
-            saveReview(e) {
+            async saveReview(e) {
                 e.preventDefault();
-                const id = parseInt(document.getElementById('revJurnalId').value);
-                const idx = this.db.journals.findIndex(x => x.id === id);
-                if(idx !== -1) {
-                    this.db.journals[idx].status = document.getElementById('revStatus').value;
-                    this.db.journals[idx].komentarGuru = document.getElementById('revKomentar').value;
-                    this.saveDb();
-                    this.closeReviewModal();
-                    this.renderReviewTable();
-                    this.showToast('Review jurnal berhasil disimpan!');
+                const id = document.getElementById('revJurnalId').value;
+                const status = document.getElementById('revStatus').value;
+                const komentarGuru = document.getElementById('revKomentar').value;
+                
+                if (status === 'Revisi' && !komentarGuru.trim()) {
+                    this.showToast('Catatan wajib diisi jika meminta Revisi!', 'error');
+                    return;
                 }
+
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'journals', id), { status, komentarGuru });
+                    this.closeReviewModal();
+                    this.showToast('Review laporan berhasil disimpan!');
+                } catch (err) { this.showToast('Gagal menyimpan review!', 'error'); }
             },
 
             printPDF(id) {
@@ -1335,14 +1612,13 @@
                 document.getElementById('pdfCatatan').innerText = j.komentarGuru || '-';
 
                 this.showToast('Memproses dokumen PDF...');
-                
                 const element = document.getElementById('printDocument');
                 const opt = {
-                    margin:       10,
-                    filename:     `Jurnal_${j.studentName.replace(/\s+/g, '_')}_${j.tanggal}.pdf`,
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2 },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    margin: 10,
+                    filename: `Laporan_${j.studentName.replace(/\s+/g, '_')}_${j.tanggal}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
 
                 html2pdf().set(opt).from(element).save().then(() => {
@@ -1350,7 +1626,7 @@
                 });
             },
 
-            // --- Fitur 6: Pemetaan Bimbingan (Admin) ---
+            // --- Pemetaan Bimbingan (Admin) Edit/Delete ---
             renderPemetaan() {
                 const sSiswa = document.getElementById('mapSiswa');
                 const sGuru = document.getElementById('mapGuru');
@@ -1369,13 +1645,13 @@
                 const mapped = lSiswa.filter(s => s.guruId || s.idukaId);
                 
                 if(mapped.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">Belum ada pemetaan bimbingan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500">Belum ada pemetaan bimbingan.</td></tr>`;
                     return;
                 }
 
                 mapped.forEach((s, idx) => {
-                    const guru = lGuru.find(u => u.id == s.guruId)?.name || '<span class="text-red-400 italic">Belum diset</span>';
-                    const iduka = lIduka.find(u => u.id == s.idukaId)?.name || '<span class="text-red-400 italic">Belum diset</span>';
+                    const guru = lGuru.find(u => u.id === s.guruId)?.name || '<span class="text-red-400 italic">Belum diset</span>';
+                    const iduka = lIduka.find(u => u.id === s.idukaId)?.name || '<span class="text-red-400 italic">Belum diset</span>';
                     
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors">
@@ -1383,145 +1659,141 @@
                             <td class="py-3 px-4 font-bold text-slate-800">${s.name}</td>
                             <td class="py-3 px-4 text-slate-600"><i class="fas fa-chalkboard-teacher text-slate-300 mr-1"></i> ${guru}</td>
                             <td class="py-3 px-4 text-slate-600"><i class="fas fa-building text-slate-300 mr-1"></i> ${iduka}</td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                <button onclick="app.editMapping('${s.id}')" class="p-2 text-secondary hover:text-blue-800 transition-colors" title="Edit Pemetaan"><i class="fas fa-edit"></i></button>
+                                <button onclick="app.deleteMapping('${s.id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Hapus Pemetaan"><i class="fas fa-trash-alt"></i></button>
+                            </td>
                         </tr>
                     `;
                 });
             },
 
-            saveMapping(e) {
-                e.preventDefault();
-                const sid = parseInt(document.getElementById('mapSiswa').value);
-                const idx = this.db.users.findIndex(u => u.id === sid);
-                
-                if(idx !== -1) {
-                    this.db.users[idx].guruId = parseInt(document.getElementById('mapGuru').value);
-                    this.db.users[idx].idukaId = parseInt(document.getElementById('mapIduka').value);
-                    this.saveDb();
-                    this.renderPemetaan();
-                    e.target.reset();
-                    this.showToast('Pemetaan berhasil disimpan!');
+            editMapping(userId) {
+                const s = this.db.users.find(u => u.id === userId);
+                if(s) {
+                    document.getElementById('map-form-title').innerHTML = '<i class="fas fa-edit text-accent mr-2"></i>Edit Pemetaan Siswa';
+                    document.getElementById('mapUserId').value = s.id;
+                    document.getElementById('mapSiswa').value = s.id;
+                    document.getElementById('mapGuru').value = s.guruId || '';
+                    document.getElementById('mapIduka').value = s.idukaId || '';
+                    document.getElementById('mapSiswa').disabled = true; // Kunci pilihan siswa
+                    document.getElementById('btnResetMap').classList.remove('hidden');
                 }
             },
 
-            // --- Fitur 7: Pengaturan, Backup & Restore ---
-            renderPengaturan() {
-                document.getElementById('setSchoolName').value = this.db.settings.schoolName;
-                document.getElementById('setSchoolAddress').value = this.db.settings.address;
+            resetMappingForm() {
+                document.getElementById('formPemetaan').reset();
+                document.getElementById('mapUserId').value = '';
+                document.getElementById('map-form-title').innerHTML = '<i class="fas fa-link text-primary mr-2"></i>Buat Pemetaan Baru';
+                document.getElementById('mapSiswa').disabled = false;
+                document.getElementById('btnResetMap').classList.add('hidden');
             },
 
-            savePengaturan(e) {
+            async deleteMapping(userId) {
+                this.confirmAction('Hapus Pemetaan', 'Yakin menghapus guru pembimbing & IDUKA untuk siswa ini?', async () => {
+                    try {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), {
+                            guruId: null, idukaId: null
+                        });
+                        this.showToast('Pemetaan berhasil dihapus!');
+                    } catch (err) { this.showToast('Gagal menghapus pemetaan', 'error'); }
+                });
+            },
+
+            async saveMapping(e) {
                 e.preventDefault();
-                this.db.settings.schoolName = document.getElementById('setSchoolName').value;
-                this.db.settings.address = document.getElementById('setSchoolAddress').value;
-                this.saveDb();
-                this.showToast('Pengaturan sekolah berhasil disimpan!');
+                // Prioritaskan ID dari input hidden (mode edit), jika tidak ada ambil dari select dropdown
+                const sid = document.getElementById('mapUserId').value || document.getElementById('mapSiswa').value;
+                const guruId = document.getElementById('mapGuru').value;
+                const idukaId = document.getElementById('mapIduka').value;
+                
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', sid), {
+                        guruId, idukaId
+                    });
+                    this.resetMappingForm();
+                    this.showToast('Pemetaan berhasil disimpan!');
+                } catch (err) {
+                    this.showToast('Gagal menyimpan pemetaan!', 'error');
+                }
+            },
+
+            // --- Pengaturan, Backup & Restore ---
+            renderPengaturan() {
+                document.getElementById('setSchoolName').value = this.db.settings.schoolName || '';
+                document.getElementById('setSchoolAddress').value = this.db.settings.address || '';
+            },
+
+            async savePengaturan(e) {
+                e.preventDefault();
+                const schoolName = document.getElementById('setSchoolName').value;
+                const address = document.getElementById('setSchoolAddress').value;
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'general'), { schoolName, address }, { merge: true });
+                    this.showToast('Pengaturan sekolah berhasil disimpan!');
+                } catch (err) { this.showToast('Gagal menyimpan pengaturan!', 'error'); }
             },
 
             backupCSV() {
                 const users = this.db.users;
-                if (users.length === 0) {
-                    this.showToast('Tidak ada data untuk dibackup', 'error');
-                    return;
-                }
-                
-                // Generate Header & Content
+                if (users.length === 0) { this.showToast('Tidak ada data', 'error'); return; }
                 const headers = ['id', 'name', 'username', 'password', 'role', 'guruId', 'idukaId'];
                 const csvRows = [headers.join(',')];
-
                 for (const row of users) {
-                    const values = headers.map(header => {
-                        const cellData = ('' + (row[header] || '')).replace(/"/g, '""'); // Escape petik ganda
-                        return `"${cellData}"`;
-                    });
+                    const values = headers.map(h => `"${('' + (row[h] || '')).replace(/"/g, '""')}"`);
                     csvRows.push(values.join(','));
                 }
-
-                // Download File Action
-                const csvString = csvRows.join('\n');
-                const blob = new Blob([csvString], { type: 'text/csv' });
+                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.setAttribute('hidden', '');
-                a.setAttribute('href', url);
-                a.setAttribute('download', `Backup_User_PKL_${new Date().getTime()}.csv`);
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                a.setAttribute('hidden', ''); a.setAttribute('href', url);
+                a.setAttribute('download', `Backup_PKL_${new Date().getTime()}.csv`);
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 this.showToast('Backup CSV berhasil diunduh!');
             },
 
             restoreCSV() {
-                const fileInput = document.getElementById('fileRestoreCsv');
-                const file = fileInput.files[0];
-                if (!file) {
-                    this.showToast('Silakan pilih file CSV terlebih dahulu', 'error');
-                    return;
-                }
+                const file = document.getElementById('fileRestoreCsv').files[0];
+                if (!file) { this.showToast('Pilih file CSV', 'error'); return; }
 
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    const content = e.target.result;
-                    const rows = content.split(/\r?\n/);
-                    if (rows.length < 2) {
-                        this.showToast('Format CSV tidak valid atau kosong', 'error');
-                        return;
-                    }
-
-                    // Pemroses CSV sederhana
+                reader.onload = async (e) => {
+                    const rows = e.target.result.split(/\r?\n/);
+                    if (rows.length < 2) return;
                     const headers = rows[0].split(',').map(h => h.trim().replace(/(^"|"$)/g, ''));
-                    let importedCount = 0;
+                    let count = 0;
 
                     for (let i = 1; i < rows.length; i++) {
-                        const row = rows[i].trim();
-                        if (!row) continue;
-
-                        const values = [];
-                        let inQuotes = false;
-                        let currentValue = '';
-                        for (let char of row) {
-                            if (char === '"') inQuotes = !inQuotes;
-                            else if (char === ',' && !inQuotes) {
-                                values.push(currentValue.replace(/(^"|"$)/g, ''));
-                                currentValue = '';
-                            } else {
-                                currentValue += char;
-                            }
+                        if (!rows[i].trim()) continue;
+                        let values = [], inQ = false, curr = '';
+                        for (let c of rows[i]) {
+                            if (c === '"') inQ = !inQ;
+                            else if (c === ',' && !inQ) { values.push(curr.replace(/(^"|"$)/g, '')); curr = ''; }
+                            else curr += c;
                         }
-                        values.push(currentValue.replace(/(^"|"$)/g, ''));
+                        values.push(curr.replace(/(^"|"$)/g, ''));
 
-                        // Pasangkan Header dengan Value
-                        const userObj = {};
-                        headers.forEach((h, index) => {
-                            userObj[h] = values[index];
-                        });
+                        let obj = {}; headers.forEach((h, idx) => obj[h] = values[idx]);
                         
-                        // Eksekusi Update / Insert ke local DB
-                        if (userObj.name && userObj.username && userObj.role) {
-                            userObj.id = parseInt(userObj.id) || Date.now() + i;
-                            if(userObj.guruId && userObj.guruId !== 'undefined') userObj.guruId = parseInt(userObj.guruId);
-                            else delete userObj.guruId;
-                            
-                            if(userObj.idukaId && userObj.idukaId !== 'undefined') userObj.idukaId = parseInt(userObj.idukaId);
-                            else delete userObj.idukaId;
+                        if (obj.name && obj.username && obj.role) {
+                            if(obj.guruId && obj.guruId !== 'undefined') obj.guruId = obj.guruId; else delete obj.guruId;
+                            if(obj.idukaId && obj.idukaId !== 'undefined') obj.idukaId = obj.idukaId; else delete obj.idukaId;
 
-                            const existingIndex = this.db.users.findIndex(u => u.username === userObj.username);
-                            if (existingIndex !== -1) {
-                                this.db.users[existingIndex] = { ...this.db.users[existingIndex], ...userObj }; // Update timpa jika username sama
-                            } else {
-                                this.db.users.push(userObj); // Insert jika baru
-                            }
-                            importedCount++;
+                            try {
+                                const exist = this.db.users.find(u => u.username === obj.username);
+                                if (exist) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', exist.id), obj);
+                                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'users'), obj);
+                                count++;
+                            } catch (err) {}
                         }
                     }
-                    
-                    this.saveDb();
-                    fileInput.value = ''; // Reset input
-                    this.showToast(`Berhasil me-restore ${importedCount} data pengguna!`);
+                    document.getElementById('fileRestoreCsv').value = '';
+                    this.showToast(`Berhasil menyinkronkan ${count} data!`);
                 };
                 reader.readAsText(file);
             },
 
-            // --- Utility: Modal & Toast UI ---
+            // --- Utility UI ---
             toggleModal(id, show) {
                 const m = document.getElementById(id);
                 const content = m.querySelector('div[class*="transform"]');
@@ -1537,22 +1809,17 @@
                     setTimeout(() => { m.classList.add('hidden'); }, 300);
                 }
             },
-
             showToast(msg, type = 'success') {
                 const toast = document.getElementById('toast');
                 const icon = toast.querySelector('i');
                 document.getElementById('toast-message').textContent = msg;
-                
                 icon.className = type === 'success' ? 'fas fa-check-circle text-green-400' : 'fas fa-exclamation-circle text-red-400';
-                
                 toast.classList.remove('translate-y-20', 'opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('translate-y-20', 'opacity-0');
-                }, 3000);
+                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
             }
         };
 
-        // Initialize application on load
+        window.app = app;
         window.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
